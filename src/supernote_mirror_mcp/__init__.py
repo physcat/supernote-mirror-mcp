@@ -7,7 +7,21 @@ from mcpatom import Image, Server
 
 from .capture import capture_frame
 from .config import DEFAULT_PORT, config_file, load_config, state, write_config
-from .image import INK_THRESHOLD, frame_stats, process
+from .image import INK_THRESHOLD, changed_bbox, decode, frame_stats, process, remember
+
+
+def _metadata(box: tuple[int, int, int, int], scale: float, screen: tuple[int, int]) -> dict:
+    """The screen region an image shows, in unscaled screen coordinates."""
+    left, top, right, bottom = box
+    return {
+        "x": left,
+        "y": top,
+        "w": right - left,
+        "h": bottom - top,
+        "scale": scale,
+        "screen_w": screen[0],
+        "screen_h": screen[1],
+    }
 
 
 def _probe(url: str) -> str:
@@ -73,19 +87,56 @@ def capture_screen(
     y: Annotated[int | None, "top edge of the region"] = None,
     w: Annotated[int | None, "width of the region"] = None,
     h: Annotated[int | None, "height of the region"] = None,
-) -> Image | str:
+) -> tuple[Image, dict] | str:
     """Capture the Supernote screen as a PNG; pass any of x/y/w/h to capture
     just that region, and trimming (the default) crops the result to its ink,
-    returning a text message instead when the captured area is blank. The
-    screen is greyscale, 1404x1872 on some models (setup reports the actual
-    size). Trimming assumes nothing about the UI: in the portrait notes app
-    the toolbar may occupy the leftmost 100 columns and the status bar the
-    bottom 82 rows, so excluding them with e.g. x=100, h=1790 can help
-    there."""
-    png = process(capture_frame(state.screencast_url), scale, auto_trim, threshold, x, y, w, h)
-    if png is None:
+    returning a text message instead when the captured area is blank. Images
+    come with metadata giving the screen region shown (x/y/w/h in unscaled
+    screen coordinates), the scale, and the screen size. The screen is
+    greyscale, 1404x1872 on some models. Trimming assumes nothing about the
+    UI: in the portrait notes app the toolbar may occupy the leftmost 100
+    columns and the status bar the bottom 82 rows, so excluding them with
+    e.g. x=100, h=1790 can help there. Also refreshes the baseline
+    capture_changes diffs against."""
+    full = capture_frame(state.screencast_url)
+    frame = decode(full)
+    remember(frame)
+    result = process(full, scale, auto_trim, threshold, x, y, w, h)
+    if result is None:
         return "The captured area has no pixels darker than threshold; pass auto_trim=false for the image anyway"
-    return Image(png, "image/png")
+    png, box = result
+    return Image(png, "image/png"), _metadata(box, scale, frame.size)
+
+
+@server.tool()
+def capture_changes(
+    scale: Annotated[float, "resize factor applied to the changed region"] = 0.5,
+    auto_trim: Annotated[bool, "crop to the ink in the changed area"] = True,
+    threshold: Annotated[int, "greyscale level below which a pixel counts as ink for auto trim"] = INK_THRESHOLD,
+) -> tuple[Image, dict] | str:
+    """Capture only what changed on the Supernote screen since the previous
+    capture (capture_screen or capture_changes): an image of the changed
+    region plus the same metadata block capture_screen returns, or a message
+    when nothing changed. With no prior capture to diff against, the full
+    screen. An erasure can leave the changed area without ink; the message
+    then gives the area so capture_screen can inspect it."""
+    png = capture_frame(state.screencast_url)
+    frame = decode(png)
+    previous = remember(frame)
+    changed = None
+    if previous is not None and previous.size == frame.size:  # else no baseline, or the screen rotated
+        changed = changed_bbox(previous, frame)
+        if changed is None:
+            return "No change since the previous capture"
+    left, top, right, bottom = changed if changed else (0, 0, frame.width, frame.height)
+    result = process(png, scale, auto_trim, threshold, x=left, y=top, w=right - left, h=bottom - top)
+    if result is None:
+        return (
+            f"The changed area ({left}, {top}) to ({right}, {bottom}) now has no ink darker than"
+            " threshold, probably an erasure"
+        )
+    cropped, box = result
+    return Image(cropped, "image/png"), _metadata(box, scale, frame.size)
 
 
 def main() -> None:

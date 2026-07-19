@@ -20,8 +20,12 @@ def screen(*ink_boxes: tuple[int, int, int, int]) -> bytes:
     return to_png(frame)
 
 
-def size_of(png: bytes | None) -> tuple[int, int]:
-    assert png is not None
+def unpack(result: tuple[bytes, tuple[int, int, int, int]] | None) -> tuple[bytes, tuple[int, int, int, int]]:
+    assert result is not None
+    return result
+
+
+def size_of(png: bytes) -> tuple[int, int]:
     return Image.open(BytesIO(png)).size
 
 
@@ -32,15 +36,17 @@ def test_frame_stats_reports_size_and_dominant_value():
 
 
 def test_trim_crops_to_padded_ink():
-    png = image.process(screen((300, 500, 320, 510)), scale=1, auto_trim=True)
-    assert size_of(png) == (20 + 2 * image.TRIM_PAD, 10 + 2 * image.TRIM_PAD)
+    png, box = unpack(image.process(screen((300, 500, 320, 510)), scale=1, auto_trim=True))
+    assert box == (290, 490, 330, 520)
+    assert size_of(png) == (40, 30)
 
 
 def test_untrimmed_region_is_exact_scaled_and_defaults_missing_edges():
-    png = image.process(screen(), scale=0.5, auto_trim=False, x=100, y=200, w=50, h=40)
+    png, box = unpack(image.process(screen(), scale=0.5, auto_trim=False, x=100, y=200, w=50, h=40))
+    assert box == (100, 200, 150, 240)
     assert size_of(png) == (25, 20)
-    png = image.process(screen(), scale=1, auto_trim=False, x=1000)
-    assert size_of(png) == (404, 1872)
+    _, box = unpack(image.process(screen(), scale=1, auto_trim=False, x=1000))
+    assert box == (1000, 0, 1404, 1872)
 
 
 def test_region_outside_the_frame_is_an_error():
@@ -50,14 +56,14 @@ def test_region_outside_the_frame_is_an_error():
         image.process(screen(), scale=1, auto_trim=True, x=100, w=0)
 
 
-def test_trim_applies_within_a_region():
-    png = image.process(screen((300, 500, 320, 510)), scale=1, auto_trim=True, x=250, y=450, w=200, h=200)
-    assert size_of(png) == (20 + 2 * image.TRIM_PAD, 10 + 2 * image.TRIM_PAD)
+def test_trim_applies_within_a_region_and_reports_screen_coordinates():
+    _, box = unpack(image.process(screen((300, 500, 320, 510)), scale=1, auto_trim=True, x=250, y=450, w=200, h=200))
+    assert box == (290, 490, 330, 520)
 
 
 def test_threshold_sets_the_ink_cutoff():
     frame = Image.new("L", (1404, 1872), 255)
     frame.paste(250, (300, 500, 320, 510))
     assert image.process(to_png(frame), scale=1, auto_trim=True) is None  # 250 is not ink by default
-    png = image.process(to_png(frame), scale=1, auto_trim=True, threshold=252)
-    assert size_of(png) == (20 + 2 * image.TRIM_PAD, 10 + 2 * image.TRIM_PAD)
+    _, box = unpack(image.process(to_png(frame), scale=1, auto_trim=True, threshold=252))
+    assert box == (290, 490, 330, 520)
