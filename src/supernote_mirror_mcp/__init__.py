@@ -7,7 +7,7 @@ from mcpatom import Image, Server
 
 from .capture import capture_frame
 from .config import DEFAULT_PORT, config_file, load_config, state, write_config
-from .image import frame_stats
+from .image import INK_THRESHOLD, frame_stats, process
 
 
 def _probe(url: str) -> str:
@@ -65,9 +65,27 @@ def setup(
 
 
 @server.tool()
-def capture_screen() -> Image:
-    """Capture the current Supernote screen as a full-resolution PNG image."""
-    return Image(capture_frame(state.screencast_url), "image/png")
+def capture_screen(
+    scale: Annotated[float, "resize factor applied after cropping; the default keeps handwriting legible"] = 0.5,
+    auto_trim: Annotated[bool, "crop to the ink in the captured area"] = True,
+    threshold: Annotated[int, "greyscale level below which a pixel counts as ink for auto trim"] = INK_THRESHOLD,
+    x: Annotated[int | None, "left edge of an exact region to capture"] = None,
+    y: Annotated[int | None, "top edge of the region"] = None,
+    w: Annotated[int | None, "width of the region"] = None,
+    h: Annotated[int | None, "height of the region"] = None,
+) -> Image | str:
+    """Capture the Supernote screen as a PNG; pass any of x/y/w/h to capture
+    just that region, and trimming (the default) crops the result to its ink,
+    returning a text message instead when the captured area is blank. The
+    screen is greyscale, 1404x1872 on some models (setup reports the actual
+    size). Trimming assumes nothing about the UI: in the portrait notes app
+    the toolbar may occupy the leftmost 100 columns and the status bar the
+    bottom 82 rows, so excluding them with e.g. x=100, h=1790 can help
+    there."""
+    png = process(capture_frame(state.screencast_url), scale, auto_trim, threshold, x, y, w, h)
+    if png is None:
+        return "The captured area has no pixels darker than threshold; pass auto_trim=false for the image anyway"
+    return Image(png, "image/png")
 
 
 def main() -> None:
