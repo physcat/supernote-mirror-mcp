@@ -5,8 +5,10 @@ screencast.
 
 ## Prerequisites
 
-- A Supernote tablet reachable on the local network, with screencast enabled
-  under Settings > Security & Privacy > Screen Mirroring.
+- A Supernote tablet on the same Wi-Fi network, with screen mirroring enabled
+  from the quick-access panel (swipe down from the top of the screen and tap
+  the mirroring icon, beside the rotate icon). Enabling mirroring shows a
+  dialog with the device's URL; it disappears at the first touch.
 - [uv](https://docs.astral.sh/uv/), for `uvx`.
 
 ## Setup
@@ -38,11 +40,11 @@ server. The command takes no arguments. With the standard JSON config:
 
 ## Configuration
 
-On first use, call the `setup` tool with the tablet's address (`host`, plus
-`port` if not the default 8080); it applies the options and reports whether the
-device is responding. The optional `save` parameter writes the configuration to
-`config.json` in the platform config directory so future sessions start
-connected.
+On first use, call the `setup` tool with the address from the mirroring dialog
+(`host`, plus `port` if not the default 8080); it applies the options and
+reports whether the device is responding. The optional `save` parameter
+writes the configuration to `config.json` in the platform config directory so
+future sessions start connected.
 
 ## Licence
 
