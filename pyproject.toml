@@ -1,0 +1,45 @@
+[project]
+name = "supernote-mirror-mcp"
+version = "0.1.0"
+description = "MCP server that captures the screen of a Supernote tablet via its built-in screencast"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = ["mcpatom>=0.1.0"]
+
+[project.scripts]
+supernote-mirror-mcp = "supernote_mirror_mcp:main"
+
+[dependency-groups]
+dev = ["pytest", "ruff", "ty"]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # Pyflakes
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "I",    # isort
+]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ty.terminal]
+error-on-warning = true
+
+[build-system]
+requires = ["uv_build>=0.10.12,<0.12.0"]
+build-backend = "uv_build"
