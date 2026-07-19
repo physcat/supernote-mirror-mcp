@@ -65,9 +65,10 @@ def test_setup_save_semantics():
     assert json.loads(config.config_file().read_text())["host"] == "canary"
 
 
-def test_hostless_save_fails_without_writing():
-    with pytest.raises(ValueError, match="setup"):
-        snm.setup(save=True)
+def test_hostless_setup_reports_guidance_without_writing():
+    result = snm.setup(save=True)
+    assert "mirroring icon" in result
+    assert str(config.config_file()) in result
     assert not config.config_file().exists()
 
 

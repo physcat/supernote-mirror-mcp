@@ -31,6 +31,7 @@ def capture_frame(url: str, timeout: float = FRAME_TIMEOUT) -> bytes:
             return extract_png(iter(lambda: response.read(65536), b""))
     except OSError as e:
         raise ConnectionError(
-            f"Cannot reach the Supernote at {url} ({e}): check the device's screen mirroring,"
-            f" or call setup to fix the address (config file: {config_file()})"
+            f"Cannot reach the Supernote at {url} ({e}): check the device's Wi-Fi and"
+            " screen mirroring (swipe down from the top of its screen, tap the mirroring"
+            f" icon), or call setup to fix the address (config file: {config_file()})"
         ) from e
