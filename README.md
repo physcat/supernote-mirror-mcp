@@ -3,6 +3,12 @@
 MCP server that captures the screen of a Supernote tablet via its built-in
 screencast.
 
+Captures can be diffed, trimmed to the ink, cropped and scaled to keep vision
+token usage down: a raw frame costs an LLM ~2500 tokens, a trimmed half-scale
+capture of a few written lines ~70. Measured on an A6 X2 "Nomad" (1404x1872),
+the only model this has been tested on; larger screens such as the Manta
+(1920x2560) cost proportionally more.
+
 ## Prerequisites
 
 - A Supernote tablet on the same Wi-Fi network, with screen mirroring enabled
@@ -35,8 +41,12 @@ server. The command takes no arguments. With the standard JSON config:
 
 ## Tools
 
-- `setup` - set the tablet's address and check the connection.
-- `capture_screen` - capture the current screen as a PNG image.
+- `setup` - updates or reports the configuration and checks the device
+  connection.
+- `capture_screen` - returns an image sized for an LLM to interpret
+  directly. Supports optional region cropping (`x`/`y`/`w`/`h`) and an
+  `auto_trim` that crops surrounding white space.
+- `capture_changes` - returns the area that changed since the last capture.
 
 ## Configuration
 

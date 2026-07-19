@@ -1,8 +1,10 @@
 [project]
 name = "supernote-mirror-mcp"
-version = "0.1.1"
+version = "0.2.0"
 description = "MCP server that captures the screen of a Supernote tablet via its built-in screencast"
 readme = "README.md"
+authors = [{ name = "Mitch" }]
+keywords = ["supernote", "mcp", "screen-mirroring", "e-ink", "screencast"]
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
@@ -10,6 +12,10 @@ dependencies = [
     "mcpatom>=0.2.0,<0.3",
     "pillow>=12.3.0",
 ]
+
+[project.urls]
+Repository = "https://github.com/physcat/supernote-mirror-mcp"
+Issues = "https://github.com/physcat/supernote-mirror-mcp/issues"
 
 [project.scripts]
 supernote-mirror-mcp = "supernote_mirror_mcp:main"
