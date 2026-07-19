@@ -31,6 +31,11 @@ server. The command takes no arguments. With the standard JSON config:
 }
 ```
 
+## Tools
+
+- `setup` - set the tablet's address and check the connection.
+- `capture_screen` - capture the current screen as a PNG image.
+
 ## Configuration
 
 On first use, call the `setup` tool with the tablet's address (`host`, plus

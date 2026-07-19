@@ -3,8 +3,9 @@
 import urllib.request
 from importlib.metadata import version
 
-from mcpatom import Server
+from mcpatom import Image, Server
 
+from .capture import capture_frame
 from .config import DEFAULT_PORT, config_file, load_config, state, write_config
 
 
@@ -37,6 +38,12 @@ def setup(host: str | None = None, port: int = DEFAULT_PORT, save: bool | None =
     if save:
         write_config()
     return f"Screencast URL is {url} ({_probe(url)})"
+
+
+@server.tool()
+def capture_screen() -> Image:
+    """Capture the current Supernote screen as a full-resolution PNG image."""
+    return Image(capture_frame(state.screencast_url), "image/png")
 
 
 def main() -> None:
