@@ -13,7 +13,7 @@ def isolated_state(monkeypatch, tmp_path):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
     monkeypatch.setattr(config.state, "host", None)
     monkeypatch.setattr(config.state, "port", config.DEFAULT_PORT)
-    monkeypatch.setattr(snm, "_probe", lambda _url: "device responding")
+    monkeypatch.setattr(snm, "_probe", lambda url: f"Screencast URL is {url} (device responding)")
 
 
 @pytest.mark.parametrize(
