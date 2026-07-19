@@ -223,7 +223,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "mcpatom", specifier = ">=0.1.0" },
+    { name = "mcpatom", specifier = ">=0.2.0,<0.3" },
     { name = "pillow", specifier = ">=12.3.0" },
 ]
 

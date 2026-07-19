@@ -7,7 +7,7 @@ license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = [
-    "mcpatom>=0.1.0",
+    "mcpatom>=0.2.0,<0.3",
     "pillow>=12.3.0",
 ]
 
