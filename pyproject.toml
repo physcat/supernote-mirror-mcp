@@ -6,7 +6,10 @@ readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
-dependencies = ["mcpatom>=0.1.0"]
+dependencies = [
+    "mcpatom>=0.1.0",
+    "pillow>=12.3.0",
+]
 
 [project.scripts]
 supernote-mirror-mcp = "supernote_mirror_mcp:main"

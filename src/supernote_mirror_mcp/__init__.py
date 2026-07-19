@@ -1,6 +1,5 @@
 """MCP server that captures the screen of a Supernote tablet via its built-in screencast."""
 
-import urllib.request
 from importlib.metadata import version
 from typing import Annotated
 
@@ -8,15 +7,14 @@ from mcpatom import Image, Server
 
 from .capture import capture_frame
 from .config import DEFAULT_PORT, config_file, load_config, state, write_config
+from .image import frame_stats
 
 
 def _probe(url: str) -> str:
-    # urlopen returns once the headers arrive; closing before any frame is read
     try:
-        with urllib.request.urlopen(url, timeout=3):
-            return "device responding"
-    except OSError as e:
-        return f"device not responding: {e}"
+        return f"Screencast URL is {url} ({frame_stats(capture_frame(url, timeout=3))})"
+    except (OSError, ValueError) as e:  # capture errors carry their own guidance
+        return str(e)
 
 
 server = Server(
@@ -37,12 +35,14 @@ def setup(
     port: Annotated[int, "the screencast port, shown alongside the address"] = DEFAULT_PORT,
     save: bool | None = None,
 ) -> str:
-    """Configure the server and check the device connection; with no arguments,
-    reports the current configuration, or first-run guidance while no host is
-    set. Passing host applies the Supernote's address, host plus port (the port
-    applies only alongside a host). save=True writes the config file for future
-    sessions, save=False leaves it alone, and the default updates an existing
-    config file only when the address changed."""
+    """Configure the server and check the device connection by capturing a
+    frame; the report gives the frame's size and dominant pixel value (near 255
+    means a mostly-white screen, blank pages and standby alike). With no
+    arguments, reports the current configuration, or first-run guidance while
+    no host is set. Passing host applies the Supernote's address, host plus
+    port (the port applies only alongside a host). save=True writes the config
+    file for future sessions, save=False leaves it alone, and the default
+    updates an existing config file only when the address changed."""
     previous = (state.host, state.port)
     if host is not None:
         state.host = host
@@ -61,7 +61,7 @@ def setup(
         save = (state.host, state.port) != previous and config_file().exists()
     if save:
         write_config()
-    return f"Screencast URL is {url} ({_probe(url)})"
+    return _probe(url)
 
 
 @server.tool()
